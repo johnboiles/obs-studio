@@ -2362,9 +2362,6 @@ int main(int argc, char *argv[])
 		perror("pthread_sigmask");
 		exit(1);
 	}
-    
-    
-    
 #endif
 
 #ifdef _WIN32
