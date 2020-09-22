@@ -130,7 +130,7 @@ static void CopyDALPlugin()
 			@"/Library/CoreMediaIO/Plug-Ins/DAL/obs-mac-virtualcam.plugin";
 		NSString *copyCmd = [NSString
 			stringWithFormat:
-				@"do shell script \"cp -R %@ %@\" with administrator privileges",
+				@"do shell script \"cp -R '%@' '%@'\" with administrator privileges",
 				sourcePath, destinationPath];
 
 		NSDictionary *errorDict;
