@@ -6,8 +6,9 @@
 #include <obs-frontend-api.h>
 #include <obs.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <AppKit/AppKit.h>
 #include "MachServer.h"
-#include "Defines.generated.h"
+#include "Defines.h"
 
 OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE("mac-virtualcam", "en-US")
@@ -47,11 +48,11 @@ static void virtualcam_output_destroy(void *data)
 static bool virtualcam_output_start(void *data)
 {
     blog(LOG_DEBUG, "output_start");
-    
+
     [sMachServer run];
 
     obs_get_video_info(&videoInfo);
-    
+
     struct video_scale_info conversion = {};
     conversion.format = VIDEO_FORMAT_UYVY;
     conversion.width = videoInfo.output_width;
@@ -84,6 +85,63 @@ static void virtualcam_output_raw_video(void *data, struct video_data *frame)
     [sMachServer sendFrameWithSize:NSMakeSize(width, height) timestamp:frame->timestamp fpsNumerator:videoInfo.fps_num fpsDenominator:videoInfo.fps_den frameBytes:outData];
 }
 
+static bool GetDALPluginStatus()
+{
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+
+    NSString *pathForFile =
+        @"/Library/CoreMediaIO/Plug-Ins/DAL/obs-mac-virtualcam.plugin";
+
+    return [fileManager fileExistsAtPath:pathForFile];
+}
+
+static void CopyDALPlugin()
+{
+    NSString *sourcePath;
+    NSRunningApplication *app = [NSRunningApplication currentApplication];
+
+    if ([app bundleIdentifier] != nil) {
+        NSURL *bundleURL = [app bundleURL];
+        NSString *pluginPath =
+            @"Contents/Resources/data/obs-mac-virtualcam.plugin";
+
+        NSURL *pluginUrl =
+            [bundleURL URLByAppendingPathComponent:pluginPath];
+        sourcePath = [pluginUrl path];
+    } else {
+        sourcePath = [[[[app executableURL]
+            URLByAppendingPathComponent:
+                @"../data/obs-mac-virtualcam.plugin"] path]
+            stringByReplacingOccurrencesOfString:@"obs/"
+                          withString:@""];
+    }
+
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+
+    if ([fileManager fileExistsAtPath:sourcePath]) {
+        NSString *destinationPath =
+            @"/Library/CoreMediaIO/Plug-Ins/DAL/obs-mac-virtualcam.plugin";
+        NSString *copyCmd = [NSString
+            stringWithFormat:
+                @"do shell script \"cp -R %@ %@\" with administrator privileges",
+                sourcePath, destinationPath];
+
+        NSDictionary *errorDict;
+        NSAppleEventDescriptor *returnDescriptor = NULL;
+        NSAppleScript *scriptObject =
+            [[NSAppleScript alloc] initWithSource:copyCmd];
+        returnDescriptor = [scriptObject executeAndReturnError:&errorDict];
+        if (errorDict != nil) {
+            const char *errorMessage = [[errorDict
+                objectForKey:@"NSAppleScriptErrorMessage"] UTF8String];
+            blog(LOG_INFO, "[macOS] VirtualCam DAL Plugin Installation status: %s",
+                 errorMessage);
+        }
+    } else {
+        blog(LOG_INFO, "[macOS] VirtualCam DAL Plugin not shipped with OBS");
+    }
+}
+
 struct obs_output_info virtualcam_output_info = {
     .id = "virtualcam_output",
     .flags = OBS_OUTPUT_VIDEO,
@@ -105,10 +163,16 @@ bool obs_module_load(void)
     {
         if (obs_output_active(output)) {
             action->setText(obs_module_text("Start Virtual Camera"));
+
             obs_output_stop(output);
             obs_output_release(output);
             output = NULL;
         } else {
+            bool dalPluginInstalled = GetDALPluginStatus();
+            if (!dalPluginInstalled) {
+                CopyDALPlugin();
+            }
+
             action->setText(obs_module_text("Stop Virtual Camera"));
             OBSData settings;
             output = obs_output_create("virtualcam_output", "virtualcam_output", settings, NULL);

@@ -1,8 +1,7 @@
-project(obs-plugin)
-
-find_package(Libobs REQUIRED)
+project(mac-virtualcam)
 
 find_library(AVFOUNDATION AVFoundation)
+find_library(APPKIT AppKit)
 find_library(COCOA Cocoa)
 find_library(COREFOUNDATION CoreFoundation)
 find_library(COREMEDIA CoreMedia)
@@ -12,57 +11,49 @@ find_library(COREMEDIAIO CoreMediaIO)
 find_library(IOSURFACE IOSurface)
 find_library(IOKIT IOKit)
 
-set(CMAKE_PREFIX_PATH "${QTDIR}")
-find_package(Qt5Core REQUIRED)
-find_package(Qt5Widgets REQUIRED)
-
-configure_file(
-	Defines.h.in
-	../../../src/obs-plugin/Defines.generated.h
-)
-
 include_directories(${AVFOUNDATION}
-                    ${COCOA}
-                    ${COREFOUNDATION}
-                    ${COREMEDIA}
-                    ${COREVIDEO}
-                    ${COREMEDIAIO}
-                    ${COCOA}
-                    ${IOSURFACE}
-                    ${LIBOBS_INCLUDE_DIR}
-                    "${LIBOBS_INCLUDE_DIR}/../UI/obs-frontend-api"
-                    ${Qt5Core_INCLUDES}
-                    ${Qt5Widgets_INCLUDES}
-                    ./
-                    ../common)
+					${APPKIT}
+					${COCOA}
+					${COREFOUNDATION}
+					${COREMEDIA}
+					${COREVIDEO}
+					${COREMEDIAIO}
+					${COCOA}
+					${IOSURFACE}
+					"${CMAKE_SOURCE_DIR}/UI/obs-frontend-api"
+					../common)
 
-set(obs-plugin_SOURCES
-	Defines.generated.h
-	plugin-main.mm
+set(mac-virtualcam_HEADERS
+	Defines.h
 	MachServer.h
-	MachServer.mm
 	../common/MachProtocol.h)
 
-add_library(obs-plugin MODULE
-	${obs-plugin_SOURCES}
-	${obs-plugin_HEADERS})
+set(mac-virtualcam_SOURCES
+	plugin-main.mm
+	MachServer.mm)
 
-target_link_libraries(obs-plugin
+add_library(mac-virtualcam MODULE
+	${mac-virtualcam_SOURCES}
+	${mac-virtualcam_HEADERS})
+
+target_link_libraries(mac-virtualcam
+	libobs
+	obs-frontend-api
+	Qt5::Core
+	Qt5::Widgets
 	${AVFOUNDATION}
+	${APPKIT}
 	${COCOA}
 	${COREFOUNDATION}
 	${COREMEDIA}
 	${COREVIDEO}
 	${COREMEDIAIO}
 	${IOSURFACE}
-	${IOKIT}
-	${LIBOBS_LIB}
-	${OBS_FRONTEND_LIB}
-	Qt5::Core
-	Qt5::Widgets)
+	${IOKIT})
 
-set_target_properties(obs-plugin PROPERTIES
-	PREFIX ""
-	OUTPUT_NAME "obs-mac-virtualcam"
+set_target_properties(mac-virtualcam PROPERTIES
+	FOLDER "plugins"
 	COMPILE_FLAGS "-std=gnu++14 -stdlib=libc++ -fobjc-arc -fobjc-weak"
 )
+
+install_obs_plugin_with_data(mac-virtualcam data)

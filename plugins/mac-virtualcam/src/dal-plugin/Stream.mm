@@ -60,7 +60,7 @@
     if (self) {
         _frameDispatchSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0,
                                                      dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
-        __weak typeof(self) wself = self;
+        __weak __typeof(self) wself = self;
         dispatch_source_set_event_handler(_frameDispatchSource, ^{
             [wself fillFrame];
         });

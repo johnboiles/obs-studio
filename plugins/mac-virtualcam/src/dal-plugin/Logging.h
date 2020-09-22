@@ -20,7 +20,7 @@
 #ifndef Logging_h
 #define Logging_h
 
-#include "Defines.generated.h"
+#include "Defines.h"
 
 #define DLog(fmt, ...) NSLog((PLUGIN_NAME @"(DAL): " fmt), ##__VA_ARGS__)
 #define DLogFunc(fmt, ...) NSLog((PLUGIN_NAME @"(DAL): %s " fmt), __FUNCTION__, ##__VA_ARGS__)

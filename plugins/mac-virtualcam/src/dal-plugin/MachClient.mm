@@ -39,7 +39,7 @@
         NSPort *receivePort = [NSMachPort port];
         _receivePort = receivePort;
         _receivePort.delegate = self;
-        __weak typeof(self) weakSelf = self;
+        __weak __typeof(self) weakSelf = self;
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
             NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
             [runLoop addPort:receivePort forMode:NSDefaultRunLoopMode];

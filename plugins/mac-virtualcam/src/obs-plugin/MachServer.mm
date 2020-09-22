@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 #include <obs-module.h>
 #include "MachProtocol.h"
-#include "Defines.generated.h"
+#include "Defines.h"
 
 @interface MachServer () <NSPortDelegate>
 @property NSPort *port;

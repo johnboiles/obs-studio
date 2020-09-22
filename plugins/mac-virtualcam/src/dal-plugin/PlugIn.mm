@@ -63,7 +63,7 @@ typedef enum {
         _stateQueue = dispatch_queue_create("com.johnboiles.obs-mac-virtualcam.dal.state", DISPATCH_QUEUE_SERIAL);
 
         _timeoutTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, _stateQueue);
-        __weak typeof(self) weakSelf = self;
+        __weak __typeof(self) weakSelf = self;
         dispatch_source_set_event_handler(_timeoutTimer, ^{
             if (weakSelf.state == PlugInStateReceivingFrames) {
                 DLog(@"No frames received for 5s, restarting connection");
